@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Covid-19 in New Zealand — Bulletin Archives</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f0eb;
+    --surface: #ffffff;
+    --surface2: #ece7e1;
+    --accent: #d42a1e;
+    --accent-glow: rgba(212, 42, 30, 0.1);
+    --text: #1a1a1a;
+    --text-dim: #6b6560;
+    --border: #ddd6ce;
+  }
+
+  body {
+    font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .page-wrap {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .red-rule {
+    width: 40px;
+    height: 3px;
+    background: var(--accent);
+    margin: 0 auto 0.5rem;
+    border-radius: 2px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    font-style: italic;
+  }
+
+  .intro {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-top: 1rem;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  /* Year dividers */
+  .year-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0 0.75rem;
+  }
+
+  .year-marker span {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    letter-spacing: -0.03em;
+  }
+
+  .year-marker::after {
+    content: '';
+    flex: 1;
+    height: 3px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    border-radius: 2px;
+  }
+
+  .year-summary {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  /* Month dividers */
+  .month-marker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.75rem 0 0.75rem;
+    padding-left: 28px;
+  }
+
+  .month-marker span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    white-space: nowrap;
+    background: var(--surface2);
+    padding: 0.25rem 0.7rem;
+    border-radius: 12px;
+  }
+
+  .month-marker::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  /* Event card */
+  .event {
+    position: relative;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+  }
+
+  .event-dot {
+    position: absolute;
+    left: -28px;
+    top: 1.1rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+    z-index: 2;
+  }
+
+  .event.active .event-dot,
+  .event:hover .event-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+
+  .event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    transition: all 0.2s;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+
+  .event:hover .event-card {
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .event.active .event-card {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .event-date {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+
+  .event-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .event-context {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-top: 0.4rem;
+  }
+
+  /* Hour scrubber */
+  .hour-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+    margin-top: 0;
+  }
+
+  .event.active .hour-panel {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 0.75rem;
+  }
+
+  .hour-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .hour-strip {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .hour-btn {
+    width: 40px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hour-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .hour-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  /* Inline player */
+  .inline-player {
+    margin-top: 0.75rem;
+    animation: fadeSlide 0.3s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .inline-player-info {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .inline-player-info strong {
+    color: var(--text);
+  }
+
+  audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    outline: none;
+  }
+
+  .player-status {
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+
+  .player-status.loading {
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .player-status.error {
+    color: var(--accent);
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  /* Hour navigation */
+  .hour-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .hour-nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .hour-nav-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .hour-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .hour-nav-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 3.5rem;
+    text-align: center;
+  }
+
+  /* Event navigation */
+  .event-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .event-nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0.2rem 0;
+    transition: color 0.15s;
+  }
+
+  .event-nav-btn:hover { color: var(--accent); }
+  .event-nav-btn:disabled { opacity: 0; pointer-events: none; }
+
+  footer {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  footer a {
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="index.html" class="back-link">&larr; Back to bulletin finder</a>
+
+  <header>
+    <div class="red-rule"></div>
+    <h1>Covid-19 in New Zealand</h1>
+    <p class="subtitle">Hear the news as it broke &mdash; hour by hour, bulletin by bulletin</p>
+    <p class="intro">The coronavirus first appeared in China in late 2019. Within months it reached New Zealand, reshaping daily life for years. This timeline traces the key moments. Tap any event to hear the RNZ bulletins from that day.</p>
+  </header>
+
+  <div id="timeline-container"></div>
+
+  <footer>Bulletins sourced from podcast.radionz.co.nz<br>Timeline based on <a href="https://www.rnz.co.nz/news/in-depth/438830/covid-19-data-visualisations-nz-in-charts" target="_blank">RNZ reporting</a></footer>
+</div>
+
+<script>
+const EVENTS = [
+  // ── 2020 ──
+  { year: 2020, month: 'February', date: '2020-02-28', label: '28 February',
+    title: 'New Zealand\u2019s first Covid-19 case reported',
+    context: 'A person in their 60s who had travelled to Auckland from Iran tested positive. The government immediately placed restrictions on arrivals from Iran. By the next day, health staff were meeting flights from across Asia at airports.' },
+
+  { year: 2020, month: 'March', date: '2020-03-11', label: '11 March',
+    title: 'WHO declares an official pandemic',
+    context: 'With cases surging across the globe, the World Health Organisation formally declared Covid-19 a pandemic. New Zealand had confirmed a handful of cases, all linked to overseas travel, but the pace was quickening.' },
+
+  { year: 2020, month: 'March', date: '2020-03-19', label: '19 March',
+    title: 'Borders close to all non-residents and citizens',
+    context: 'For the first time in history, New Zealand shut its borders. All indoor gatherings of more than 100 were cancelled. Director-General of Health Ashley Bloomfield said all 28 cases were still linked to overseas travel \u2014 no community transmission yet.' },
+
+  { year: 2020, month: 'March', date: '2020-03-21', label: '21 March',
+    title: 'Four-level alert system introduced; country set at Level 2',
+    context: 'With 52 cases and community transmission no longer ruled out, Ardern asked people over 70 and immunocompromised to stay home. A new four-level alert system was unveiled. Nauru, Tonga, Samoa and Tuvalu had already declared emergencies.' },
+
+  { year: 2020, month: 'March', date: '2020-03-23', label: '23 March',
+    title: 'Level 3 \u2014 schools close, non-essential businesses shut',
+    context: '36 new cases brought the total to 102, including confirmed community transmission in Wairarapa and Auckland. In 48 hours, the country would move to Level 4. Supermarkets were already being swamped by people stockpiling.' },
+
+  { year: 2020, month: 'March', date: '2020-03-25', label: '25 March',
+    title: 'Level 4 lockdown begins at 11:59\u202Fpm',
+    context: 'A state of emergency was declared. The Olympics were postponed. The entire nation went into isolation for a minimum of four weeks. Globally there were 372,757 confirmed cases and 16,231 deaths. Normally bustling streets fell silent.' },
+
+  { year: 2020, month: 'March', date: '2020-03-29', label: '29 March',
+    title: 'New Zealand\u2019s first Covid-19 death',
+    context: 'A woman in her 70s from the West Coast became the country\u2019s first fatality. 63 new cases were reported the same day, bringing the national total to 514. The global count had passed half a million.' },
+
+  { year: 2020, month: 'April', date: '2020-04-02', label: '2 April',
+    title: 'Biggest single-day increase \u2014 89 new cases',
+    context: 'The first wave peaked with the total reaching 797. Fourteen people were hospitalised. Finance Minister Grant Robertson announced legislation to let struggling businesses place debts into hibernation.' },
+
+  { year: 2020, month: 'April', date: '2020-04-07', label: '7 April',
+    title: 'First time recoveries exceed new cases',
+    context: '54 new cases but 65 recoveries \u2014 the first sign the lockdown was working. Health Minister David Clark was demoted after admitting he took his family to the beach in breach of lockdown rules.' },
+
+  { year: 2020, month: 'April', date: '2020-04-09', label: '9 April',
+    title: 'New cases drop to 29; Ardern\u2019s \u201Cwall of defence\u201D speech',
+    context: '\u201CIn the face of the greatest threat to human health we have faced in over a century, Kiwis have quietly and collectively implemented a nationwide wall of defence,\u201D the Prime Minister said. \u201CYou are breaking the chain of transmission and you did it for each other.\u201D' },
+
+  { year: 2020, month: 'May', date: '2020-05-04', label: '4 May',
+    title: 'First day of zero new cases since March',
+    context: 'For the first time since 16 March, no new cases were reported. The country was at Level 3, with fast food drive-throughs reopened and small numbers of children back at school. But clusters at rest homes in Christchurch and Auckland had taken a heavy toll.' },
+
+  { year: 2020, month: 'June', date: '2020-06-08', label: '8 June',
+    title: 'Zero active cases \u2014 NZ moves to Level 1',
+    context: 'The Ministry of Health confirmed there were no more active cases in the country. At 11:59\u202Fpm, nearly all domestic restrictions were lifted. Border controls and mandatory 14-day managed isolation remained for arrivals. The virus appeared to be eliminated.' },
+
+  { year: 2020, month: 'August', date: '2020-08-11', label: '11 August',
+    title: 'Community transmission returns after 102 days',
+    context: 'Four members of a South Auckland family tested positive with no link to the border. The streak was over. The source of infection remained unknown. Auckland would go back into lockdown the next day.' },
+
+  { year: 2020, month: 'August', date: '2020-08-12', label: '12 August',
+    title: 'Auckland back to Level 3',
+    context: 'Greater Auckland moved to Level 3 at noon; the rest of the country to Level 2. Fifteen testing centres opened across the city, with long queues forming outside. The cluster would eventually be linked to a workplace and grow to over 170 cases.' },
+
+  { year: 2020, month: 'September', date: '2020-09-29', label: '29 September',
+    title: 'Global death toll passes 1 million',
+    context: 'The New York Times reported the virus had taken more lives in ten months than HIV, malaria, influenza, cholera and measles combined. New Zealand had recorded 1,500 cases and was slowly emerging from its second Auckland lockdown.' },
+
+  { year: 2020, month: 'October', date: '2020-10-07', label: '7 October',
+    title: 'Auckland finally returns to Level 1',
+    context: 'After nearly two months of restrictions, Auckland joined the rest of the country at Level 1. Daily life returned to something close to normal, though the border remained sealed and managed isolation continued for all arrivals.' },
+
+  { year: 2020, month: 'October', date: '2020-10-12', label: '12 October',
+    title: 'Pfizer vaccine purchase agreement announced',
+    context: 'The government secured 1.5 million doses from Pfizer and BioNTech, subject to clinical trial success and regulatory approval. It would be months before any needles went into arms, but a path out was taking shape.' },
+
+  { year: 2020, month: 'October', date: '2020-10-17', label: '17 October',
+    title: 'Delayed general election held',
+    context: 'Originally scheduled for 19 September, the election was pushed back due to the August outbreak. Labour won a historic outright majority \u2014 the first under MMP \u2014 widely seen as a verdict on the government\u2019s Covid response.' },
+
+  // ── 2021 ──
+  { year: 2021, month: 'January', date: '2021-01-24', label: '24 January',
+    title: 'First community case of South African variant',
+    context: 'A Northland woman tested positive after leaving managed isolation, likely catching the more contagious B.1.351 variant from someone on the same hotel floor. She had scrupulously used the Covid Tracer app, enabling rapid contact tracing. Australia suspended quarantine-free travel within hours.' },
+
+  { year: 2021, month: 'February', date: '2021-02-14', label: '14 February',
+    title: 'Auckland Level 3 again \u2014 Papatoetoe High School cluster',
+    context: 'Three new community cases in a single South Auckland household, including a Papatoetoe High School student, triggered another snap lockdown. The school was closed immediately. The rest of New Zealand moved to Level 2.' },
+
+  { year: 2021, month: 'February', date: '2021-02-20', label: '20 February',
+    title: 'NZ\u2019s first vaccinations given to border workers',
+    context: 'Cleaners, nurses and security staff from Auckland\u2019s Jet Park quarantine hotel became the first New Zealanders to receive Pfizer\u2019s Covid-19 vaccine. The plan was to vaccinate 12,000 border and managed isolation workers in the coming weeks, with the general public to follow in the second half of the year.' },
+
+  { year: 2021, month: 'February', date: '2021-02-27', label: '27 February',
+    title: 'Auckland back to Level 3 a third time',
+    context: 'Two new community cases could not be directly linked to earlier South Auckland infections. One had visited a gym, a supermarket and the Manukau Institute of Technology while possibly infectious for a week. \u201CWe may well have close contacts who are already infected,\u201D Ardern said. Auckland went into lockdown from 6\u202Fam the next morning.' },
+
+  { year: 2021, month: 'August', date: '2021-08-17', label: '17 August',
+    title: 'Delta arrives in the community',
+    context: 'A 58-year-old Devonport man tested positive with no link to the border \u2014 the Delta variant, genomically linked to cases in New South Wales. He had been infectious since 12 August and visited Coromandel. A nationwide Level 4 lockdown took effect from 11:59\u202Fpm. Vaccinations were suspended for two days.' },
+
+  { year: 2021, month: 'August', date: '2021-08-25', label: '25 August',
+    title: '62 new cases in one day; church cluster emerges',
+    context: 'The M\u0101ngere Assembly of God church cluster had grown to 58 cases from a single service. Forty of the day\u2019s new cases were Pasifika. Covid was detected in Warkworth sewage. A record 87,972 vaccine doses were administered, as the outbreak drove urgency.' },
+
+  { year: 2021, month: 'August', date: '2021-08-30', label: '30 August',
+    title: 'First vaccine-related death acknowledged',
+    context: 'The COVID-19 Vaccine Independent Safety Monitoring Board determined that the death of a woman following vaccination was due to myocarditis, a known rare side effect. It was considered probably caused by the vaccine. The outbreak total stood at 564.' },
+
+  { year: 2021, month: 'September', date: '2021-09-04', label: '4 September',
+    title: 'First death in the Delta outbreak',
+    context: 'A woman in her 90s with underlying conditions died at North Shore Hospital, bringing New Zealand\u2019s total pandemic death toll to 27. The outbreak total was 782 cases. Auckland remained in Level 4 with no end date in sight.' },
+
+  { year: 2021, month: 'September', date: '2021-09-16', label: '16 September',
+    title: 'Bloomfield and Ardern voice 90% vaccination target',
+    context: 'Director-General Bloomfield said New Zealand needed 90% or above to enjoy the community benefits of vaccination. A truck driver who made deliveries from Auckland to Waikato and Bay of Plenty tested positive, showing how porous the Auckland boundary was becoming.' },
+
+  { year: 2021, month: 'September', date: '2021-09-21', label: '21 September',
+    title: 'Auckland drops from Level 4 to Level 3',
+    context: 'After five weeks in the strictest lockdown, Auckland eased slightly. The rest of the country had already moved to a revised Level 2 \u2014 dubbed \u201CLevel 2 Delta\u201D \u2014 with new mask and sign-in requirements. The outbreak total had passed 1,050 cases.' },
+
+  { year: 2021, month: 'October', date: '2021-10-03', label: '3 October',
+    title: 'Covid reaches Waikato \u2014 Raglan, Hamilton',
+    context: 'Two community cases appeared in Raglan and Hamilton East, genomically linked to the Auckland outbreak. Level 3 restrictions were imposed on five Waikato towns from 11:59\u202Fpm. The virus was spreading beyond Auckland\u2019s boundary despite checkpoints.' },
+
+  { year: 2021, month: 'October', date: '2021-10-16', label: '16 October',
+    title: '\u201CSuper Saturday\u201D \u2014 130,002 vaccine doses in one day',
+    context: 'A nationwide push saw a record 130,002 doses administered in a single day. In Auckland, 85% of eligible people had received at least one dose. The campaign marked a turning point in the race to vaccinate before the Delta outbreak overwhelmed the health system.' },
+
+  { year: 2021, month: 'November', date: '2021-11-22', label: '22 November',
+    title: 'Traffic light system announced',
+    context: 'The entire country would move to a new \u201CCOVID-19 Protection Framework\u201D based on vaccination certificates on 2 December. Auckland would start at red; most other regions at orange. Alert levels were being retired after 20 months. A man in his 40s died at Middlemore Hospital.' },
+
+  { year: 2021, month: 'November', date: '2021-11-26', label: '26 November',
+    title: 'Omicron named a variant of concern by the WHO',
+    context: 'A new variant first identified in southern Africa alarmed the world. New Zealand placed additional restrictions on travellers from nine African countries. Daily community cases were around 170, almost all in Auckland, as the Delta outbreak slowly waned.' },
+
+  { year: 2021, month: 'December', date: '2021-12-02', label: '2 December',
+    title: 'Traffic light framework replaces alert levels at 11:59\u202Fpm',
+    context: 'After 20 months of the four-level alert system, the new framework took effect. Auckland and Northland went to red. The South Island and much of the lower North Island started at orange. The \u201CMy Vaccine Pass\u201D became the key to accessing hospitality and events.' },
+
+  { year: 2021, month: 'December', date: '2021-12-15', label: '15 December',
+    title: 'Auckland border lifted for vaccinated travellers',
+    context: 'After months of hard boundaries, most people could travel out of Auckland if double-vaccinated or holding a recent negative test. The city\u2019s isolation from the rest of the country was finally easing, though daily cases continued.' },
+
+  { year: 2021, month: 'December', date: '2021-12-16', label: '16 December',
+    title: 'First Omicron case in NZ \u2014 managed isolation, Christchurch',
+    context: 'The new variant was detected in a returnee in managed isolation. Community case numbers were falling \u2014 91 that day \u2014 but officials knew Omicron\u2019s extreme transmissibility meant a very different wave was coming.' },
+
+  // ── 2022 ──
+  { year: 2022, month: 'January', date: '2022-01-17', label: '17 January',
+    title: 'Children 5\u201311 eligible for vaccination',
+    context: 'The paediatric Pfizer vaccine became available at around 500 sites. Boosters opened to all over-18s, with the gap between second dose and booster reduced to four months. Border cases were surging, fuelled by massive Omicron outbreaks overseas.' },
+
+  { year: 2022, month: 'January', date: '2022-01-18', label: '18 January',
+    title: 'First Omicron community transmission confirmed',
+    context: 'A household contact of an MIQ worker who had tested positive was confirmed as the first community Omicron case. The worker\u2019s virus was genomically linked to a case in the Stamford Plaza border facility. The community spread many had feared was beginning.' },
+
+  { year: 2022, month: 'January', date: '2022-01-23', label: '23 January',
+    title: 'Whole country goes to Red light setting',
+    context: 'An Omicron-positive family from Motueka had attended a wedding, a funeral and entertainment venues in Auckland before travelling home. A flight attendant on one of their flights tested positive. The risk of undetected community spread was now considered high.' },
+
+  { year: 2022, month: 'January', date: '2022-01-31', label: '31 January',
+    title: 'Omicron becomes the dominant variant',
+    context: 'With 91 community cases reported and numbers climbing fast, Omicron had overtaken Delta. Common early symptoms were a sore, scratchy throat and runny nose \u2014 different from earlier variants. The Health Ministry warned of a steep trajectory ahead.' },
+
+  { year: 2022, month: 'February', date: '2022-02-13', label: '13 February',
+    title: 'Daily cases hit 810 \u2014 spread now nationwide',
+    context: 'Cases were reported from Northland to Southland for the first time. The seven-day average had jumped to 432. Hospitals were beginning to fill, with 32 people in hospital. Just days earlier, the daily count had been in the low hundreds.' },
+
+  { year: 2022, month: 'February', date: '2022-02-24', label: '24 February',
+    title: 'Cases explode to 6,137; Phase 3 activated',
+    context: 'The seven-day PCR average hit 2,911. Phase 3 of the Omicron plan came into effect: only household contacts would be traced, RAT-positive people would self-report, and cases were asked to notify their own contacts. The system was pivoting from elimination to managed spread.' },
+
+  { year: 2022, month: 'February', date: '2022-02-25', label: '25 February',
+    title: '12,011 cases in a day \u2014 RAT self-reporting begins',
+    context: 'With 3,807 PCR-confirmed and 8,223 RAT-reported cases, the daily count doubled overnight. Five deaths were reported in North Shore, Waikato and Tauranga hospitals. The number was staggering for a country that had once celebrated zero cases.' },
+
+  { year: 2022, month: 'March', date: '2022-03-01', label: '1 March',
+    title: '19,566 cases; Novavax approved in NZ',
+    context: 'The Omicron wave peaked with 19,566 daily cases \u2014 2,513 by PCR, 17,053 by RAT. There were 373 people in hospital and 9 in ICU. The Novavax vaccine was approved for those 18 and older, offering an alternative for people hesitant about mRNA vaccines.' },
+];
+
+const YEAR_SUMMARIES = {
+  2020: 'The year the virus arrived. From New Zealand\u2019s first case in February to a historic nationwide lockdown in March, a brief taste of elimination in June, and a devastating second outbreak in August.',
+  2021: 'Delta changed everything. Border vaccinations began in February, but by August the variant was loose in the community. Auckland spent months in lockdown as the country raced toward 90% vaccination.',
+  2022: 'Omicron swept the country. Within weeks, daily cases went from double digits to nearly 20,000. The era of elimination was over; managed spread became the new reality.',
+};
+
+function buildUrl(dateStr, hour) {
+  const d = dateStr.replace(/-/g, '');
+  const h = String(hour).padStart(2, '0') + '00';
+  return `https://podcast.radionz.co.nz/diginews/${d}-${h}-064.mp3`;
+}
+
+function formatDisplayDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-NZ', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+}
+
+const container = document.getElementById('timeline-container');
+let activeEvent = null;
+let activeHour = null;
+let activeAudio = null;
+
+let currentYear = null;
+let currentMonth = null;
+
+EVENTS.forEach((evt, idx) => {
+  // Year marker
+  if (evt.year !== currentYear) {
+    currentYear = evt.year;
+    currentMonth = null;
+
+    const ym = document.createElement('div');
+    ym.className = 'year-marker';
+    ym.innerHTML = `<span>${evt.year}</span>`;
+    container.appendChild(ym);
+
+    if (YEAR_SUMMARIES[evt.year]) {
+      const ys = document.createElement('p');
+      ys.className = 'year-summary';
+      ys.textContent = YEAR_SUMMARIES[evt.year];
+      container.appendChild(ys);
+    }
+
+    const tl = document.createElement('div');
+    tl.className = 'timeline';
+    tl.id = `timeline-${evt.year}`;
+    container.appendChild(tl);
+  }
+
+  const timeline = document.getElementById(`timeline-${evt.year}`);
+
+  // Month marker
+  if (evt.month !== currentMonth) {
+    currentMonth = evt.month;
+    const mm = document.createElement('div');
+    mm.className = 'month-marker';
+    mm.style.paddingLeft = '0';
+    mm.innerHTML = `<span>${evt.month}</span>`;
+    timeline.appendChild(mm);
+  }
+
+  const el = document.createElement('div');
+  el.className = 'event';
+  el.dataset.index = idx;
+
+  let hourBtns = '';
+  for (let h = 6; h <= 23; h++) {
+    hourBtns += `<button class="hour-btn" data-hour="${h}">${String(h).padStart(2, '0')}</button>`;
+  }
+
+  const contextHtml = evt.context
+    ? `<p class="event-context">${evt.context}</p>`
+    : '';
+
+  el.innerHTML = `
+    <div class="event-dot"></div>
+    <div class="event-card">
+      <div class="event-date">${evt.label} ${evt.year}</div>
+      <div class="event-title">${evt.title}</div>
+      ${contextHtml}
+      <div class="hour-panel">
+        <div class="hour-label">Browse this day's bulletins</div>
+        <div class="hour-strip">${hourBtns}</div>
+        <div class="hour-nav">
+          <button class="hour-nav-btn" id="prev-hr-${idx}" disabled>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            Prev
+          </button>
+          <div class="hour-nav-label" id="hr-label-${idx}">&mdash;</div>
+          <button class="hour-nav-btn" id="next-hr-${idx}" disabled>
+            Next
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div id="player-${idx}"></div>
+        <div class="event-nav">
+          <button class="event-nav-btn" data-dir="-1" ${idx === 0 ? 'disabled' : ''}>&larr; Previous event</button>
+          <button class="event-nav-btn" data-dir="1" ${idx === EVENTS.length - 1 ? 'disabled' : ''}>Next event &rarr;</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  timeline.appendChild(el);
+
+  // Click to expand
+  el.querySelector('.event-card').addEventListener('click', (e) => {
+    if (e.target.closest('.hour-strip') || e.target.closest('.hour-nav') ||
+        e.target.closest('.inline-player') || e.target.closest('.event-nav') ||
+        e.target.tagName === 'AUDIO') return;
+    toggleEvent(idx);
+  });
+
+  // Hour button clicks
+  el.querySelectorAll('.hour-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playHour(idx, parseInt(btn.dataset.hour));
+    });
+  });
+
+  // Hour nav arrows
+  document.getElementById(`prev-hr-${idx}`)?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (activeHour > 6) playHour(idx, activeHour - 1);
+  });
+  document.getElementById(`next-hr-${idx}`)?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (activeHour < 23) playHour(idx, activeHour + 1);
+  });
+
+  // Event nav
+  el.querySelectorAll('.event-nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dir = parseInt(btn.dataset.dir);
+      const target = idx + dir;
+      if (target >= 0 && target < EVENTS.length) {
+        toggleEvent(target);
+        const targetEl = document.querySelector(`.event[data-index="${target}"]`);
+        if (targetEl) {
+          setTimeout(() => {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      }
+    });
+  });
+});
+
+function toggleEvent(idx) {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio = null;
+  }
+
+  const allEvents = document.querySelectorAll('.event');
+  const targetEl = allEvents[idx];
+
+  if (activeEvent === idx) {
+    targetEl.classList.remove('active');
+    activeEvent = null;
+    activeHour = null;
+    return;
+  }
+
+  if (activeEvent !== null) {
+    allEvents[activeEvent].classList.remove('active');
+    const prevPlayer = document.getElementById(`player-${activeEvent}`);
+    if (prevPlayer) prevPlayer.innerHTML = '';
+    allEvents[activeEvent].querySelectorAll('.hour-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  targetEl.classList.add('active');
+  activeEvent = idx;
+  activeHour = null;
+  updateHourNav(idx);
+
+  setTimeout(() => {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 150);
+}
+
+function updateHourNav(idx) {
+  const prevBtn = document.getElementById(`prev-hr-${idx}`);
+  const nextBtn = document.getElementById(`next-hr-${idx}`);
+  const label = document.getElementById(`hr-label-${idx}`);
+
+  if (activeHour === null) {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    label.innerHTML = '&mdash;';
+  } else {
+    prevBtn.disabled = activeHour <= 6;
+    nextBtn.disabled = activeHour >= 23;
+    label.textContent = String(activeHour).padStart(2, '0') + ':00';
+  }
+}
+
+function playHour(eventIdx, hour) {
+  const evt = EVENTS[eventIdx];
+  const url = buildUrl(evt.date, hour);
+  const playerDiv = document.getElementById(`player-${eventIdx}`);
+
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio = null;
+  }
+
+  activeHour = hour;
+
+  const eventEl = document.querySelector(`.event[data-index="${eventIdx}"]`);
+  eventEl.querySelectorAll('.hour-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.hour) === hour);
+  });
+
+  updateHourNav(eventIdx);
+
+  const displayDate = formatDisplayDate(evt.date);
+  const displayHour = String(hour).padStart(2, '0') + ':00';
+
+  playerDiv.innerHTML = `
+    <div class="inline-player">
+      <div class="inline-player-info">
+        <strong>${displayHour}</strong> bulletin &mdash; ${displayDate}
+      </div>
+      <audio id="active-audio" controls autoplay preload="auto" src="${url}"></audio>
+      <div id="active-status" class="player-status loading">Loading bulletin...</div>
+    </div>
+  `;
+
+  const audio = document.getElementById('active-audio');
+  const status = document.getElementById('active-status');
+  activeAudio = audio;
+
+  audio.addEventListener('playing', () => {
+    status.remove();
+  }, { once: true });
+
+  audio.addEventListener('error', () => {
+    status.className = 'player-status error';
+    status.textContent = `No bulletin found for ${displayHour} on this date.`;
+  }, { once: true });
+
+  audio.addEventListener('ended', () => {
+    if (activeHour < 23) {
+      playHour(eventIdx, activeHour + 1);
+    }
+  });
+}
+</script>
+
+</body>
+</html>

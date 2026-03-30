@@ -325,6 +325,47 @@
     color: var(--text);
     border-color: var(--accent);
   }
+
+  .date-confirm {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+    min-height: 1.1em;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+    font-style: italic;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .error-action-btn {
+    background: none;
+    border: 1px solid var(--error);
+    border-radius: 20px;
+    color: var(--error);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .error-action-btn:hover {
+    background: var(--error);
+    color: #fff;
+  }
 </style>
 </head>
 <body>
@@ -348,8 +389,9 @@
       <button class="quick-btn" data-offset="7">1 week ago</button>
       <button class="quick-btn" data-offset="365">1 year ago</button>
     </div>
+    <div class="date-confirm" id="date-confirm"></div>
 
-    <label>Pick an hour <span style="font-weight:400;text-transform:none;letter-spacing:0">(NZST)</span></label>
+    <label>Pick an hour <span id="tz-label" style="font-weight:400;text-transform:none;letter-spacing:0"></span></label>
     <div class="clock-wrap">
       <div class="clock-face" id="clock-face">
         <div class="clock-center-dot"></div>
@@ -364,7 +406,14 @@
     </button>
   </div>
 
-  <div id="player-area"></div>
+  <div id="player-area">
+    <p class="hint">Choose a date, pick an hour, then press Play.</p>
+  </div>
+
+  <div style="text-align:center;margin-top:1.5rem;">
+    <a href="covid.html" style="font-size:0.85rem;color:var(--accent);text-decoration:none;font-weight:500;">Covid-19 Timeline &rarr;</a>
+    <p style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;font-style:italic;">Hear the pandemic unfold, bulletin by bulletin</p>
+  </div>
 
   <footer>Bulletins sourced from podcast.radionz.co.nz</footer>
 </div>
@@ -436,7 +485,7 @@
       el.classList.toggle('selected', parseInt(el.dataset.hour) === hour);
     });
 
-    clockDisplay.innerHTML = `<span>${String(hour).padStart(2, '0')}:00</span> NZST`;
+    clockDisplay.innerHTML = `<span>${String(hour).padStart(2, '0')}:00</span> ${nzTz}`;
   }
 
   function getHourFromPointer(e) {
@@ -481,11 +530,30 @@
   clockFace.addEventListener('pointerup', () => { dragging = false; });
   clockFace.addEventListener('pointercancel', () => { dragging = false; });
 
+  // Determine NZ timezone abbreviation (NZST or NZDT)
+  function getNZTzAbbr() {
+    const fmt = new Intl.DateTimeFormat('en-NZ', { timeZone: 'Pacific/Auckland', timeZoneName: 'short' });
+    const parts = fmt.formatToParts(new Date());
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart ? tzPart.value : 'NZST';
+  }
+  const nzTz = getNZTzAbbr();
+  document.getElementById('tz-label').textContent = `(${nzTz})`;
+
   // Set max date to today (NZ time)
   const nzNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Pacific/Auckland' }));
   const todayStr = formatDateISO(nzNow);
   datePicker.max = todayStr;
   datePicker.value = todayStr;
+
+  const dateConfirm = document.getElementById('date-confirm');
+
+  function showDateConfirm(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    dateConfirm.textContent = 'Selected: ' + d.toLocaleDateString('en-NZ', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
 
   // Quick pick buttons
   document.querySelectorAll('.quick-btn').forEach(btn => {
@@ -501,11 +569,9 @@
   });
 
   datePicker.addEventListener('change', () => {
-    selectedHour = null;
-    playBtn.disabled = true;
-    clockFace.querySelectorAll('.clock-number').forEach(el => el.classList.remove('selected'));
-    clockHand.style.height = '0px';
-    clockDisplay.innerHTML = '';
+    playerArea.innerHTML = '';
+    if (datePicker.value) showDateConfirm(datePicker.value);
+    else dateConfirm.textContent = '';
   });
 
   function formatDateISO(d) {
@@ -521,7 +587,14 @@
     return `https://podcast.radionz.co.nz/diginews/${d}-${h}-064.mp3`;
   }
 
-  playBtn.addEventListener('click', () => {
+  function tryAdjacentHour(offset) {
+    const newHour = selectedHour + offset;
+    if (newHour < 0 || newHour > 23) return;
+    selectHour(newHour);
+    playBtn.click();
+  }
+
+  playBtn.addEventListener('click', async () => {
     const dateStr = datePicker.value;
     if (!dateStr || selectedHour === null) return;
 
@@ -535,23 +608,59 @@
     playerArea.innerHTML = `
       <div class="player-card">
         <div class="player-label">${displayDate}</div>
-        <div class="player-title">${displayHour} NZST Bulletin</div>
-        <audio id="audio-player" controls autoplay preload="auto"
-               src="${url}"></audio>
-        <div id="player-status" class="status loading">Loading bulletin...</div>
+        <div class="player-title">${displayHour} ${nzTz} Bulletin</div>
+        <div id="player-status" class="status loading">Checking archive...</div>
       </div>
     `;
 
-    const audio = document.getElementById('audio-player');
     const status = document.getElementById('player-status');
 
-    audio.addEventListener('playing', () => {
+    // Preflight check
+    try {
+      const resp = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+    } catch (e) {
+      // no-cors HEAD won't give us status, so we fall through to audio element
+    }
+
+    const playerCard = playerArea.querySelector('.player-card');
+    const audioEl = document.createElement('audio');
+    audioEl.id = 'audio-player';
+    audioEl.controls = true;
+    audioEl.autoplay = true;
+    audioEl.preload = 'auto';
+    audioEl.src = url;
+    playerCard.insertBefore(audioEl, status);
+
+    status.textContent = 'Loading bulletin...';
+
+    audioEl.addEventListener('playing', () => {
       status.remove();
     }, { once: true });
 
-    audio.addEventListener('error', () => {
+    audioEl.addEventListener('error', () => {
       status.className = 'status error';
-      status.textContent = 'Bulletin not available for this date and time.';
+      const hourStr = String(selectedHour).padStart(2, '0') + ':00';
+      status.innerHTML = `No bulletin found for ${hourStr} on ${displayDate}.`;
+
+      const actions = document.createElement('div');
+      actions.className = 'error-actions';
+
+      if (selectedHour > 0) {
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'error-action-btn';
+        prevBtn.textContent = `Try ${String(selectedHour - 1).padStart(2, '0')}:00`;
+        prevBtn.addEventListener('click', () => tryAdjacentHour(-1));
+        actions.appendChild(prevBtn);
+      }
+      if (selectedHour < 23) {
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'error-action-btn';
+        nextBtn.textContent = `Try ${String(selectedHour + 1).padStart(2, '0')}:00`;
+        nextBtn.addEventListener('click', () => tryAdjacentHour(1));
+        actions.appendChild(nextBtn);
+      }
+
+      status.appendChild(actions);
     }, { once: true });
   });
 
